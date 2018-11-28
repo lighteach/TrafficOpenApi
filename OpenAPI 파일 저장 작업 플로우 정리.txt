@@ -1,0 +1,13 @@
+OpenAPI 파일 저장 작업 플로우 정리
+
+1.     API 호출 후 응답받은 XML 코드를 다음과 같이 저장한다.
+
+A.     <responselist> 라는 엘리먼트를 생성한다
+
+B.      응답받은 XML을 XmlDocument로 불러온 후 response 엘리먼트만 추출,
+
+<responselist> 엘리먼트에 자식으로 등록한다.
+
+C.      등록 전에 ReqType, MinX, MaxX, MinY, MaxY 속성을 모두 조합하여 동일한 response 엘리먼트가 있는지 확인하고,
+
+없는 경우 속성을 가지고 있는 id 라는 엘리먼트를 response 엘리먼트의 바로 밑 자식으로 추가한다.
