@@ -20,8 +20,20 @@ namespace TrafficOpenApi.Controllers
 		#region NTrafficInfo : 교통소통정보
 		public JsonResult NTrafficInfo(NTrafficInfo_P p)
 		{
-			TrafficInfo tInfo = new TrafficInfo();
+			//foreach (string key in Request.ServerVariables)
+			//{
+			//	Response.Write($"{key} : {Request.ServerVariables[key]}<br />");
+			//}
+			//Response.Write($"{Server.MapPath("/")}");
+
+			//var model = new
+			//{
+			//	ReturnCode = 0
+			//};
+
+			TrafficInfo tInfo = new TrafficInfo(Server.MapPath("/"));
 			NTrafficInfo_R model = tInfo.NTrafficInfo(p);
+
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
 		#endregion

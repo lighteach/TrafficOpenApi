@@ -26,7 +26,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"{this.MinX},{this.MaxX},{this.MinY},{this.MaxY},{this.ReqType}.xml";
+				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -49,7 +49,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"{this.MinX},{this.MaxX},{this.MinY},{this.MaxY},{this.ReqType}.xml";
+				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -72,7 +72,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"{this.MinX},{this.MaxX},{this.MinY},{this.MaxY},{this.ReqType}.xml";
+				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -95,7 +95,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"{this.MinX},{this.MaxX},{this.MinY},{this.MaxY},{this.ReqType}.xml";
+				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}

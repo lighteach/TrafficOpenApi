@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Web;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Threading.Tasks;
@@ -31,21 +31,32 @@ namespace TrafficOpenApi.Core.Libs
 		}
 		#endregion
 
+		private string m_LocalPath = "";
 		private string m_ConfigFileName = "TrafficInfoSettings.json";
+
+		public TrafficInfo(string localPath)
+		{
+			m_LocalPath = localPath;
+		}
 
 		#region GetSettings : 설정 파일을 읽어온다
 		public TrafficInfoSettingsModel GetSettings
 		{
 			get
 			{
+				if (string.IsNullOrEmpty(m_LocalPath)) throw new Exception("Config 파일의 디렉토리 경로는 반드시 제공되어야 합니다.");
+
 				TrafficInfoSettingsModel model = null;
-				string configPath = Directory.GetCurrentDirectory();
-				configPath = Path.Combine(configPath, m_ConfigFileName);
+				string configPath = Path.Combine(m_LocalPath, m_ConfigFileName);
 
 				if (File.Exists(configPath))
 				{
 					string configStr = File.ReadAllText(configPath);
 					model = JsonConvert.DeserializeObject<TrafficInfoSettingsModel>(configStr);
+
+					// 스와핑 되는 XML 파일이 위치 할 디렉토리가 없으면 만들어야 한다.
+					if (!Directory.Exists(model.ApiXmlPath))
+						Directory.CreateDirectory(model.ApiXmlPath);
 				}
 				else
 				{
@@ -74,8 +85,23 @@ namespace TrafficOpenApi.Core.Libs
 			TrafficInfoSettingsModel settings = GetSettings;
 			TrafficInfoApiUrl apiUrl = settings.ApiUrlList.FirstOrDefault<TrafficInfoApiUrl>(a => a.name.Equals(direction.ToString()));
 			string reqUrl = $"{apiUrl.url}?{urlParams}";
-			WebClient web = new WebClient();
-			string result = web.DownloadString(reqUrl);
+
+			string result = string.Empty;
+
+			//WebClient web = new WebClient();
+			//string result = web.DownloadString(reqUrl);
+
+			HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(reqUrl);
+			req.Method = "GET";
+			req.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+			req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+			using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+			{
+				using (StreamReader sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
+				{
+					result = sr.ReadToEnd();
+				}
+			}
 
 			return result;
 		}
@@ -83,6 +109,13 @@ namespace TrafficOpenApi.Core.Libs
 
 		public string GetResultXmlWithUpdate(TrafficInfoDirection direction, string xmlPath, string urlParams)
 		{
+			TrafficInfoSettingsModel settings = GetSettings;
+			// 혹시라도 xmlPath변수에 저장 디렉토리가 있는지 확인해서 없으면 연결해준다.
+			if (xmlPath.IndexOf(settings.ApiXmlPath) == -1)
+			{
+				xmlPath = Path.Combine(settings.ApiXmlPath, xmlPath);
+			}
+
 			XmlDocument xdRtn = new XmlDocument();
 			XmlHandling xmlHand = new XmlHandling();
 
@@ -94,14 +127,31 @@ namespace TrafficOpenApi.Core.Libs
 					// 파일 내용을 받아온 xml을 로컬 xml 파일에 갱신한다.
 					XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
 					XmlDocument xdTarget = xmlHand.GetXmlDocByFilePath(xmlPath);
-					xdRtn = xmlHand.GetXmlDocWithUpdateProceed(xdTarget, xdResult);
+					xdRtn = xmlHand.GetXmlDocWithUpdateProceed(xmlPath, xdTarget, xdResult);
+				}
+				else
+				{
+					// XML 파일이 없으면 생성하고 거기다가 갱신한다.
+					XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
+					XmlNode resultResp = xdResult.SelectSingleNode("//response");
+
+					XmlDocument xdTmp = new XmlDocument();
+					XmlDeclaration xDeclare = xdTmp.CreateXmlDeclaration("1.0", "UTF-8", null);
+					xdTmp.AppendChild(xDeclare);
+
+					XmlNode responselist = xdTmp.CreateElement("responselist");
+					responselist.InnerXml = resultResp.OuterXml;
+
+					xdTmp.AppendChild(responselist);
+					xdTmp.Save(xmlPath);
+
+					// 리턴 될 XmlDocument에도 전달해준다
+					xdRtn.LoadXml(xml);
 				}
 			}
 
 			return xdRtn.OuterXml;
 		}
-
-		XmlSerializer serializer = null;
 
 		public T XmlToModel<T>(string xmlStr)
 		{
