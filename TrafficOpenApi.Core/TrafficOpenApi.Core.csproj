@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="Libs\TrafficInfo.cs" />
     <Compile Include="Libs\XmlHandling.cs" />
+    <Compile Include="Models\ResultXmlWithUpdateModel.cs" />
     <Compile Include="Models\TrafficInfoParamModel.cs" />
     <Compile Include="Models\TrafficInfoResultModel.cs" />
     <Compile Include="Models\TrafficInfoSettingsModel.cs" />

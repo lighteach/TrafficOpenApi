@@ -79,7 +79,7 @@ namespace TrafficOpenApi.Core.Libs
 		}
 		#endregion
 
-		#region GetResultXml : 비동기 GET 통신을 수행 후 결과 XML 문자열을 반환한다.
+		#region GetResultXml : Http GET 통신을 수행 후 결과 XML 문자열을 반환한다.
 		public string GetResultXml(TrafficInfoDirection direction, string urlParams)
 		{
 			TrafficInfoSettingsModel settings = GetSettings;
@@ -88,27 +88,35 @@ namespace TrafficOpenApi.Core.Libs
 
 			string result = string.Empty;
 
-			//WebClient web = new WebClient();
-			//string result = web.DownloadString(reqUrl);
-
-			HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(reqUrl);
-			req.Method = "GET";
-			req.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
-			req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
-			using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
+			try
 			{
-				using (StreamReader sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
+				HttpWebRequest req = (HttpWebRequest)HttpWebRequest.Create(reqUrl);
+				req.Method = "GET";
+				req.UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+				req.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+				req.Timeout = 10000;        // 10초만 기다린다. ms 이기 때문에 10초는 10000ms 이다.
+				using (HttpWebResponse resp = (HttpWebResponse)req.GetResponse())
 				{
-					result = sr.ReadToEnd();
+					using (StreamReader sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8))
+					{
+						result = sr.ReadToEnd();
+					}
 				}
+			}
+			catch (Exception ex)
+			{
+				string exStr = ex.ToString();
 			}
 
 			return result;
 		}
 		#endregion
 
-		public string GetResultXmlWithUpdate(TrafficInfoDirection direction, string xmlPath, string urlParams)
+		#region GetResultXmlWithUpdate : 통신 후 가져온 xml 내용을 로컬 XML 파일에 갱신하면서 반환한다
+		public ResultXmlWithUpdateModel GetResultXmlWithUpdate(TrafficInfoDirection direction, string xmlPath, string urlParams)
 		{
+			ResultXmlWithUpdateModel rtn = new ResultXmlWithUpdateModel(false, ResultXmlWithUpdateErrorKind.None, string.Empty);
+
 			TrafficInfoSettingsModel settings = GetSettings;
 			// 혹시라도 xmlPath변수에 저장 디렉토리가 있는지 확인해서 없으면 연결해준다.
 			if (xmlPath.IndexOf(settings.ApiXmlPath) == -1)
@@ -122,37 +130,59 @@ namespace TrafficOpenApi.Core.Libs
 			string xml = GetResultXml(direction, urlParams);
 			if (!string.IsNullOrEmpty(xml))      // 통신해서 가져온 내용이 있으면
 			{
-				if (File.Exists(xmlPath))               // 파일이 있는지 찾아서 있으면
+				// XML 내용이 있긴 있는데 에러 관련 XML이면
+				if (xml.IndexOf("<rs>") != -1)
 				{
-					// 파일 내용을 받아온 xml을 로컬 xml 파일에 갱신한다.
-					XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
-					XmlDocument xdTarget = xmlHand.GetXmlDocByFilePath(xmlPath);
-					xdRtn = xmlHand.GetXmlDocWithUpdateProceed(xmlPath, xdTarget, xdResult);
+					xdRtn.LoadXml(xml);
+					rtn = new ResultXmlWithUpdateModel(false, ResultXmlWithUpdateErrorKind.RsXml, xdRtn.SelectSingleNode("//rs").InnerText);
 				}
 				else
 				{
-					// XML 파일이 없으면 생성하고 거기다가 갱신한다.
-					XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
-					XmlNode resultResp = xdResult.SelectSingleNode("//response");
+					if (File.Exists(xmlPath))               // 파일이 있는지 찾아서 있으면
+					{
+						// 파일 내용을 받아온 xml을 로컬 xml 파일에 갱신한다.
+						XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
+						XmlDocument xdTarget = xmlHand.GetXmlDocByFilePath(xmlPath);
+						xdRtn = xmlHand.GetXmlDocWithUpdateProceed(xmlPath, xdTarget, xdResult);
+					}
+					else
+					{
+						// XML 파일이 없으면 생성하고 거기다가 갱신한다.
+						XmlDocument xdResult = xmlHand.GetXmlDocByString(xml);
+						XmlNode resultResp = xdResult.SelectSingleNode("//response");
 
-					XmlDocument xdTmp = new XmlDocument();
-					XmlDeclaration xDeclare = xdTmp.CreateXmlDeclaration("1.0", "UTF-8", null);
-					xdTmp.AppendChild(xDeclare);
+						XmlDocument xdTmp = new XmlDocument();
+						XmlDeclaration xDeclare = xdTmp.CreateXmlDeclaration("1.0", "UTF-8", null);
+						xdTmp.AppendChild(xDeclare);
 
-					XmlNode responselist = xdTmp.CreateElement("responselist");
-					responselist.InnerXml = resultResp.OuterXml;
+						XmlNode responselist = xdTmp.CreateElement("responselist");
+						responselist.InnerXml = resultResp.OuterXml;
 
-					xdTmp.AppendChild(responselist);
-					xdTmp.Save(xmlPath);
+						xdTmp.AppendChild(responselist);
+						xdTmp.Save(xmlPath);
 
-					// 리턴 될 XmlDocument에도 전달해준다
-					xdRtn.LoadXml(xml);
+						// 리턴 될 XmlDocument에도 전달해준다
+						xdRtn.LoadXml(xml);
+						rtn = new ResultXmlWithUpdateModel(true, ResultXmlWithUpdateErrorKind.None, xdRtn.OuterXml);
+					}
 				}
 			}
+			else
+			{
+				rtn = new ResultXmlWithUpdateModel(false, ResultXmlWithUpdateErrorKind.Empty, string.Empty);
+			}
 
-			return xdRtn.OuterXml;
-		}
+			return rtn;
+		} 
+		#endregion
 
+		#region XmlToModel : xml 스트링을 객체화(직렬화) 한다
+		/// <summary>
+		/// XmlToModel : xml 스트링을 객체화(직렬화) 한다
+		/// </summary>
+		/// <typeparam name="T">객체화를 희망하는 객체타입</typeparam>
+		/// <param name="xmlStr">객체화 시킬 XML 내용</param>
+		/// <returns>객체화 된 객체</returns>
 		public T XmlToModel<T>(string xmlStr)
 		{
 			T rtn = default(T);
@@ -163,13 +193,20 @@ namespace TrafficOpenApi.Core.Libs
 			}
 			return rtn;
 		}
+		#endregion
 
 		#region NTrafficInfo : 교통소통정보
 		public NTrafficInfo_R NTrafficInfo(NTrafficInfo_P p)
 		{
+			string result = "";
+			NTrafficInfo_R model = new NTrafficInfo_R();
 			p.key = GetSettings.CertKey;
-			string result = GetResultXmlWithUpdate(TrafficInfoDirection.NTrafficInfo, p.ToXmlFileName(), ClassSerialize(p));
-			NTrafficInfo_R model = XmlToModel<NTrafficInfo_R>(result);
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NTrafficInfo, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<NTrafficInfo_R>(xmlResult.ResultText);
+			}
+			
 			return model;
 		}
 		#endregion
