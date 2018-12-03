@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs
+/packages
+/TrafficOpenApi.Core/bin/Debug
+/TrafficOpenApi.Core/obj/Debug
+/TrafficOpenApi.WebApi/bin
+/TrafficOpenApi.WebApi/obj/Debug
