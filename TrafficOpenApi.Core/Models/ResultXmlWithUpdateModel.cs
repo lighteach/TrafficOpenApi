@@ -11,6 +11,7 @@ namespace TrafficOpenApi.Core.Models
 		None = 0
 		, RsXml = 1
 		, Empty = 2
+		, Null = 3
 	}
 
 	public class ResultXmlWithUpdateModel

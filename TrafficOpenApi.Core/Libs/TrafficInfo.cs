@@ -26,17 +26,29 @@ namespace TrafficOpenApi.Core.Libs
 			, NEventIdentity
 			, NIncidentIdentity
 			, NCCTVInfo
+			, NCCTVImage
 			, VMS
 			, fcldata
 		}
 		#endregion
 
+		private static TrafficInfo instance = null;
+
 		private string m_LocalPath = "";
 		private string m_ConfigFileName = "TrafficInfoSettings.json";
 
-		public TrafficInfo(string localPath)
+		private TrafficInfo(string localPath)
 		{
 			m_LocalPath = localPath;
+		}
+
+		public static TrafficInfo CreateInstance(string localPath)
+		{
+			if (instance == null)
+			{
+				instance = new TrafficInfo(localPath);
+			}
+			return instance;
 		}
 
 		#region GetSettings : 설정 파일을 읽어온다
@@ -122,6 +134,11 @@ namespace TrafficOpenApi.Core.Libs
 			if (xmlPath.IndexOf(settings.ApiXmlPath) == -1)
 			{
 				xmlPath = Path.Combine(settings.ApiXmlPath, xmlPath);
+				// 각 API 네이밍별로 디렉토리가 구성되도록 해야하기 때문에
+				// 디렉토리 명을 가져와서 있는지 확인하고 없으면 만든다.
+				string tmpPathDir = Path.GetDirectoryName(xmlPath);
+				if (!Directory.Exists(tmpPathDir))
+					Directory.CreateDirectory(tmpPathDir);
 			}
 
 			XmlDocument xdRtn = new XmlDocument();
@@ -130,11 +147,11 @@ namespace TrafficOpenApi.Core.Libs
 			string xml = GetResultXml(direction, urlParams);
 			if (!string.IsNullOrEmpty(xml))      // 통신해서 가져온 내용이 있으면
 			{
-				// XML 내용이 있긴 있는데 에러 관련 XML이면
-				if (xml.IndexOf("<rs>") != -1)
+				// 가져온 XML이 이상한 놈인지 아닌지 검사한다
+				Tuple<bool, ResultXmlWithUpdateErrorKind, string> tplAvailable = XmlAvailableCheck(xml);
+				if (tplAvailable.Item1 == false)
 				{
-					xdRtn.LoadXml(xml);
-					rtn = new ResultXmlWithUpdateModel(false, ResultXmlWithUpdateErrorKind.RsXml, xdRtn.SelectSingleNode("//rs").InnerText);
+					rtn = new ResultXmlWithUpdateModel(false, tplAvailable.Item2, tplAvailable.Item3);
 				}
 				else
 				{
@@ -173,6 +190,47 @@ namespace TrafficOpenApi.Core.Libs
 			}
 
 			return rtn;
+		}
+		#endregion
+
+		#region XmlAvailableCheck : 응답 XML 내용이 유효한지 확인한다
+		private Tuple<bool, ResultXmlWithUpdateErrorKind, string> XmlAvailableCheck(string xml)
+		{
+			bool rtn = false;
+			ResultXmlWithUpdateErrorKind errorKind = ResultXmlWithUpdateErrorKind.None;
+			string errContent = "";
+			XmlHandling xmlHand = new XmlHandling();
+			XmlDocument xdTmp = null;
+
+			if (string.IsNullOrEmpty(xml) || string.IsNullOrWhiteSpace(xml))
+			{	// 아얘 아무것도 없는 쓰레기 새끼면
+				errorKind = ResultXmlWithUpdateErrorKind.Empty;
+			}
+			else if (xml.IndexOf("<rs>") != -1)
+			{   // XML 내용이 있긴 있는데 에러 관련 XML이면
+				xdTmp = xmlHand.GetXmlDocByString(xml);
+				errorKind = ResultXmlWithUpdateErrorKind.RsXml;
+				errContent = xdTmp.SelectSingleNode("//rs").InnerText;
+			}
+			else if (xml.IndexOf("<response>") != -1)
+			{	// response 요소는 있는데 내용이 NULL 이면
+				xdTmp = xmlHand.GetXmlDocByString(xml);
+				if (xdTmp.SelectSingleNode("response").InnerText.Trim().ToUpper() == "NULL")
+				{
+					errorKind = ResultXmlWithUpdateErrorKind.Null;
+					errContent = xdTmp.SelectSingleNode("response").InnerText.Trim();
+				}
+				else
+				{
+					rtn = true;
+				}
+			}
+			else
+			{
+				rtn = true;
+			}
+
+			return Tuple.Create(rtn, errorKind, errContent);
 		} 
 		#endregion
 
@@ -186,10 +244,13 @@ namespace TrafficOpenApi.Core.Libs
 		public T XmlToModel<T>(string xmlStr)
 		{
 			T rtn = default(T);
-			XmlSerializer serializer = new XmlSerializer(typeof(T));
-			using (TextReader reader = new StringReader(xmlStr))
+			if (!string.IsNullOrEmpty(xmlStr) && !string.IsNullOrWhiteSpace(xmlStr))
 			{
-				rtn = (T)serializer.Deserialize(reader);
+				XmlSerializer serializer = new XmlSerializer(typeof(T));
+				using (TextReader reader = new StringReader(xmlStr))
+				{
+					rtn = (T)serializer.Deserialize(reader);
+				}
 			}
 			return rtn;
 		}
@@ -198,8 +259,7 @@ namespace TrafficOpenApi.Core.Libs
 		#region NTrafficInfo : 교통소통정보
 		public NTrafficInfo_R NTrafficInfo(NTrafficInfo_P p)
 		{
-			string result = "";
-			NTrafficInfo_R model = new NTrafficInfo_R();
+			NTrafficInfo_R model = null;
 			p.key = GetSettings.CertKey;
 			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NTrafficInfo, p.ToXmlFileName(), ClassSerialize(p));
 			if (xmlResult.IsSuccess)
@@ -212,42 +272,92 @@ namespace TrafficOpenApi.Core.Libs
 		#endregion
 
 		#region NEventIdentity : 공사정보
-		public string NEventIdentity(NEventIdentity_P p)
+		public NEventIdentity_R NEventIdentity(NEventIdentity_P p)
 		{
+			NEventIdentity_R model = null;
 			p.key = GetSettings.CertKey;
-			return GetResultXmlWithUpdate(TrafficInfoDirection.NEventIdentity, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NEventIdentity, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<NEventIdentity_R>(xmlResult.ResultText);
+			}
+
+			return model;
 		}
 		#endregion
 
 		#region NIncidentIdentity : 사고정보
-		public string NIncidentIdentity(NIncidentIdentity_P p)
+		public NIncidentIdentity_R NIncidentIdentity(NIncidentIdentity_P p)
 		{
+			NIncidentIdentity_R model = null;
 			p.key = GetSettings.CertKey;
-			return GetResultXmlWithUpdate(TrafficInfoDirection.NIncidentIdentity, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NIncidentIdentity, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<NIncidentIdentity_R>(xmlResult.ResultText);
+			}
+
+			return model;
 		}
 		#endregion
 
 		#region NCCTVInfo : CCTV영상
-		public string NCCTVInfo(NCCTVInfo_P p)
+		public NCCTVInfo_R NCCTVInfo(NCCTVInfo_P p)
 		{
+			NCCTVInfo_R model = null;
 			p.key = GetSettings.CertKey;
-			return GetResultXmlWithUpdate(TrafficInfoDirection.NCCTVInfo, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NCCTVInfo, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<NCCTVInfo_R>(xmlResult.ResultText);
+			}
+
+			return model;
+		}
+		#endregion
+
+		#region NCCTVImage : CCTV정지영상
+		public NCCTVInfo_R NCCTVImage(NCCTVImage_P p)
+		{
+			NCCTVInfo_R model = null;
+			p.key = GetSettings.CertKey;
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.NCCTVImage, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<NCCTVInfo_R>(xmlResult.ResultText);
+			}
+
+			return model;
 		}
 		#endregion
 
 		#region VMS : VMS 표출정보
-		public string VMS(VMS_P p)
+		public VMS_R VMS(VMS_P p)
 		{
+			VMS_R model = null;
 			p.key = GetSettings.CertKey;
-			return GetResultXmlWithUpdate(TrafficInfoDirection.VMS, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.VMS, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<VMS_R>(xmlResult.ResultText);
+			}
+
+			return model;
 		}
 		#endregion
 
 		#region fcldata : 교통소통정보
-		public string fcldata(fcldata_P p)
+		public fcldata_R fcldata(fcldata_P p)
 		{
+			fcldata_R model = null;
 			p.key = GetSettings.CertKey;
-			return GetResultXmlWithUpdate(TrafficInfoDirection.fcldata, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.fcldata, p.ToXmlFileName(), ClassSerialize(p));
+			if (xmlResult.IsSuccess)
+			{
+				model = XmlToModel<fcldata_R>(xmlResult.ResultText);
+			}
+
+			return model;
 		}
 		#endregion
 	}

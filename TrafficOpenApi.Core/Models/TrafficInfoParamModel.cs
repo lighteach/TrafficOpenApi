@@ -5,16 +5,11 @@ using System.Web;
 
 namespace TrafficOpenApi.Core.Models
 {
-	public class TrafficInfoParamModel
-	{
-	}
-
 	#region NTrafficInfo_P : 교통소통정보
 	public class NTrafficInfo_P
 	{
 		public string key { get; set; } // 공개키
 		public string ReqType { get; set; } // boundary 요청여부(2)
-		public string TrafficInfo { get; set; } // 
 		public string MinX { get; set; } // boundary MinX
 		public string MinY { get; set; } // boundary MinY
 		public string MaxX { get; set; } // boundary MaxX
@@ -26,7 +21,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
+				strRtn = $"NTrafficInfo\\MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -39,7 +34,6 @@ namespace TrafficOpenApi.Core.Models
 		public string key { get; set; } // 공개키
 		public string ReqType { get; set; } // boundary 요청여부(2)
 		public string type { get; set; } // 도로정보 (its : 국도 / ex : 고속도로)
-		public string EventIdentity { get; set; } // 
 		public string MinX { get; set; } // boundary MinX
 		public string MinY { get; set; } // boundary MinY
 		public string MaxX { get; set; } // boundary MaxX
@@ -49,7 +43,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
+				strRtn = $"NEventIdentity\\MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -62,7 +56,6 @@ namespace TrafficOpenApi.Core.Models
 		public string key { get; set; } // 공개키
 		public string ReqType { get; set; } // boundary 요청여부(2)
 		public string type { get; set; } // 도로정보 (its : 국도 / ex : 고속도로)
-		public string IncidentIdentity { get; set; } // 
 		public string MinX { get; set; } // boundary MinX
 		public string MinY { get; set; } // boundary MinY
 		public string MaxX { get; set; } // boundary MaxX
@@ -72,7 +65,7 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
+				strRtn = $"NIncidentIdentity\\MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}
@@ -85,7 +78,6 @@ namespace TrafficOpenApi.Core.Models
 		public string key { get; set; } // 공개키
 		public string ReqType { get; set; } // boundary 요청여부(2)
 		public string type { get; set; } // 도로정보 (its : 국도 / ex : 고속도로)
-		public string CCTVInfo { get; set; } // 
 		public string MinX { get; set; } // boundary MinX
 		public string MinY { get; set; } // boundary MinY
 		public string MaxX { get; set; } // boundary MaxX
@@ -95,7 +87,29 @@ namespace TrafficOpenApi.Core.Models
 			string strRtn = string.Empty;
 			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
 			{
-				strRtn = $"MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
+				strRtn = $"NCCTVInfo\\MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
+			}
+			return strRtn;
+		}
+	}
+	#endregion
+
+	#region NCCTVImage_P : CCTV정지영상
+	public class NCCTVImage_P
+	{
+		public string key { get; set; } // 공개키
+		public string ReqType { get; set; } // boundary 요청여부(2)
+		public string type { get; set; } // 도로정보 (its : 국도 / ex : 고속도로)
+		public string MinX { get; set; } // boundary MinX
+		public string MinY { get; set; } // boundary MinY
+		public string MaxX { get; set; } // boundary MaxX
+		public string MaxY { get; set; } // boundary MaxY
+		public string ToXmlFileName()
+		{
+			string strRtn = string.Empty;
+			if (this.MinX != null && this.MaxX != null && this.MinY != null && this.MaxY != null)
+			{
+				strRtn = $"NCCTVImage\\MinX={this.MinX},MaxX={this.MaxX},MinY={this.MinY},MaxY={this.MaxY},ReqType={this.ReqType}.xml";
 			}
 			return strRtn;
 		}

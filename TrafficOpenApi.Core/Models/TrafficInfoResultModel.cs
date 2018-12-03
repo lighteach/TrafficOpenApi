@@ -6,9 +6,19 @@ using System.Xml.Serialization;
 
 namespace TrafficOpenApi.Core.Models
 {
-	public class TrafficInfoResultModel
+	#region WebReturnModel : 실제 컨트롤러에서 JSon으로 반환되어질 모델
+	public class WebReturnModel<T>
 	{
-	}
+		public T ReturnModel { get; set; }
+		public bool IsSuccess
+		{
+			get
+			{
+				return (ReturnModel == null ? false : true);
+			}
+		}
+	} 
+	#endregion
 
 	#region NTrafficInfo_R : 교통소통정보
 	[XmlRoot("response")]
@@ -82,7 +92,7 @@ namespace TrafficOpenApi.Core.Models
 	}
 	#endregion
 
-	#region NCCTVInfo_R : CCTV영상
+	#region NCCTVInfo_R : CCTV영상/CCTV 정지영상
 	public class NCCTVInfo_R
 	{
 		public string CoordType { get; set; } // 좌표타입

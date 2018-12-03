@@ -17,22 +17,25 @@ namespace TrafficOpenApi.Controllers
 		    return View();
 		}
 
+		#region TrafficInfoInstance : TrafficInfo 객체의 싱글톤 객체를 가져오는 프로퍼티
+		private TrafficInfo TrafficInfoInstance
+		{
+			get
+			{
+				TrafficInfo tInfo = TrafficInfo.CreateInstance(Server.MapPath("/"));
+				return tInfo;
+			}
+		} 
+		#endregion
+
 		#region NTrafficInfo : 교통소통정보
+		// 테스트 참고 : http://openapi.its.go.kr/api/NTrafficInfo?key=1540911606392&ReqType=2&MinX=127.649805&MaxX=127.650227&MinY=37.252124&MaxY=37.252533
 		public JsonResult NTrafficInfo(NTrafficInfo_P p)
 		{
-			//foreach (string key in Request.ServerVariables)
-			//{
-			//	Response.Write($"{key} : {Request.ServerVariables[key]}<br />");
-			//}
-			//Response.Write($"{Server.MapPath("/")}");
-
-			//var model = new
-			//{
-			//	ReturnCode = 0
-			//};
-
-			TrafficInfo tInfo = new TrafficInfo(Server.MapPath("/"));
-			NTrafficInfo_R model = tInfo.NTrafficInfo(p);
+			WebReturnModel<NTrafficInfo_R> model = new WebReturnModel<NTrafficInfo_R>()
+			{
+				ReturnModel = TrafficInfoInstance.NTrafficInfo(p)
+			};
 
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
@@ -41,7 +44,10 @@ namespace TrafficOpenApi.Controllers
 		#region NEventIdentity : 공사정보
 		public JsonResult NEventIdentity(NEventIdentity_P p)
 		{
-			NEventIdentity_R model = new NEventIdentity_R();
+			WebReturnModel< NEventIdentity_R > model = new WebReturnModel<NEventIdentity_R>()
+			{
+				ReturnModel = TrafficInfoInstance.NEventIdentity(p)
+			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
 		#endregion
@@ -49,7 +55,10 @@ namespace TrafficOpenApi.Controllers
 		#region NIncidentIdentity : 사고정보
 		public JsonResult NIncidentIdentity(NIncidentIdentity_P p)
 		{
-			NIncidentIdentity_R model = new NIncidentIdentity_R();
+			WebReturnModel<NIncidentIdentity_R> model = new WebReturnModel<NIncidentIdentity_R>()
+			{
+				ReturnModel = TrafficInfoInstance.NIncidentIdentity(p)
+			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
 		#endregion
@@ -57,15 +66,32 @@ namespace TrafficOpenApi.Controllers
 		#region NCCTVInfo : CCTV영상
 		public JsonResult NCCTVInfo(NCCTVInfo_P p)
 		{
-			NCCTVInfo_R model = new NCCTVInfo_R();
+			WebReturnModel<NCCTVInfo_R> model = new WebReturnModel<NCCTVInfo_R>()
+			{
+				ReturnModel = TrafficInfoInstance.NCCTVInfo(p)
+			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
+		#endregion
+
+		#region NCCTVImage : CCTV정지영상
+		public JsonResult NCCTVImage(NCCTVImage_P p)
+		{
+			WebReturnModel<NCCTVInfo_R> model = new WebReturnModel<NCCTVInfo_R>()
+			{
+				ReturnModel = TrafficInfoInstance.NCCTVImage(p)
+			};
+			return Json(model, JsonRequestBehavior.AllowGet);
+		} 
 		#endregion
 
 		#region VMS : VMS 표출정보
 		public JsonResult VMS(VMS_P p)
 		{
-			VMS_R model = new VMS_R();
+			WebReturnModel<VMS_R> model = new WebReturnModel<VMS_R>()
+			{
+				ReturnModel = TrafficInfoInstance.VMS(p)
+			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
 		#endregion
@@ -73,7 +99,10 @@ namespace TrafficOpenApi.Controllers
 		#region fcldata : 교통소통정보
 		public JsonResult fcldata(fcldata_P p)
 		{
-			fcldata_R model = new fcldata_R();
+			WebReturnModel<fcldata_R> model = new WebReturnModel<fcldata_R>()
+			{
+				ReturnModel = TrafficInfoInstance.fcldata(p)
+			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
 		#endregion

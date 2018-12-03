@@ -11,8 +11,9 @@ namespace TrafficOpenApi.Core.Libs
 {
 	public class XmlHandling
 	{
+		#region GetXmlDocWithUpdateProceed : 로컬 XML 파일을 갱신 후 가져온 XML문서를 반환한다.
 		/// <summary>
-		/// XmlUpdateProceed : 로컬 XML 파일을 갱신한다.
+		/// GetXmlDocWithUpdateProceed : 로컬 XML 파일을 갱신 후 가져온 XML문서를 반환한다.
 		/// </summary>
 		/// <param name="targetXmlPath">갱신한 데이터를 저장할 XML 파일의 경로</param>
 		/// <param name="target">로컬에 저장된 XML 파일을 XmlDocument로 변환한 갱신 대상 데이터</param>
@@ -29,7 +30,7 @@ namespace TrafficOpenApi.Core.Libs
 			// response 노드는 coordtype 값을 구분으로 하여 여러개를 가지고 있을 수 있다
 			// 그래서 갱신해야 할 대상 response 노드 는 반드시 받아온 xml의 coordtype에 일치하는 노드가 되어야 한다.
 			XmlNode tarResponse = target.SelectSingleNode($"//responselist/response[coordtype={srcCoordType.InnerText}]");
-			if (tarResponse != null)	// 갱신 할 response 노드가 존재한다면
+			if (tarResponse != null)    // 갱신 할 response 노드가 존재한다면
 			{
 				XmlNode tarCoordtype = tarResponse.SelectSingleNode("//coordtype");
 				XmlNode tarDatacount = tarResponse.SelectSingleNode("//datacount");
@@ -65,20 +66,27 @@ namespace TrafficOpenApi.Core.Libs
 			}
 
 			return source;
-		}
+		} 
+		#endregion
 
+		#region GetXmlDocByFilePath : XML 파일을 기반으로 XmlDocument를 생성
 		public XmlDocument GetXmlDocByFilePath(string path)
 		{
 			XmlDocument rtn = new XmlDocument();
-			rtn.Load(path);
+			if (File.Exists(path))
+				rtn.Load(path);
 			return rtn;
 		}
+		#endregion
 
+		#region GetXmlDocByString : XML 문자열을 기반으로 XmlDocument를 생성
 		public XmlDocument GetXmlDocByString(string xml)
 		{
 			XmlDocument rtn = new XmlDocument();
-			rtn.LoadXml(xml);
+			if (!string.IsNullOrEmpty(xml) && !string.IsNullOrWhiteSpace(xml))
+				rtn.LoadXml(xml);
 			return rtn;
-		}
+		} 
+		#endregion
 	}
 }
