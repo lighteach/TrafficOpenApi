@@ -27,7 +27,7 @@ namespace TrafficOpenApi.Core.Libs
 			, NIncidentIdentity
 			, NCCTVInfo
 			, NCCTVImage
-			, VMS
+			, VMSInfo
 			, fcldata
 		}
 		#endregion
@@ -180,8 +180,9 @@ namespace TrafficOpenApi.Core.Libs
 
 						// 리턴 될 XmlDocument에도 전달해준다
 						xdRtn.LoadXml(xml);
-						rtn = new ResultXmlWithUpdateModel(true, ResultXmlWithUpdateErrorKind.None, xdRtn.OuterXml);
 					}
+
+					rtn = new ResultXmlWithUpdateModel(true, ResultXmlWithUpdateErrorKind.None, xdRtn.OuterXml);
 				}
 			}
 			else
@@ -331,15 +332,15 @@ namespace TrafficOpenApi.Core.Libs
 		}
 		#endregion
 
-		#region VMS : VMS 표출정보
-		public VMS_R VMS(VMS_P p)
+		#region VMSInfo : VMS 표출정보
+		public VMSInfo_R VMSInfo(VMSInfo_P p)
 		{
-			VMS_R model = null;
+			VMSInfo_R model = null;
 			p.key = GetSettings.CertKey;
-			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.VMS, p.ToXmlFileName(), ClassSerialize(p));
+			ResultXmlWithUpdateModel xmlResult = GetResultXmlWithUpdate(TrafficInfoDirection.VMSInfo, p.ToXmlFileName(), ClassSerialize(p));
 			if (xmlResult.IsSuccess)
 			{
-				model = XmlToModel<VMS_R>(xmlResult.ResultText);
+				model = XmlToModel<VMSInfo_R>(xmlResult.ResultText);
 			}
 
 			return model;

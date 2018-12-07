@@ -26,8 +26,8 @@
 			"description": "CCTV정지영상"
 		},
 		{
-			"name": "VMS",
-			"url": "http://openapi.its.go.kr:8082/api/VMS",
+			"name": "VMSInfo",
+			"url": "http://openapi.its.go.kr:8082/api/VMSInfo",
 			"description": "VMS 표출정보"
 		},
 		{

@@ -117,13 +117,13 @@ namespace TrafficOpenApi.Core.Models
 	#endregion
 
 	#region VMS_P : VMS 표출정보
-	public class VMS_P
+	public class VMSInfo_P
 	{
 		public string key { get; set; } // 공개키
 		public string getType { get; set; } // 포맷 ( xml : xml방식(기본값) / json : json방식 )
 		public string ToXmlFileName()
 		{
-			return "VMS.xml";
+			return "VMSInfo.xml";
 		}
 	}
 	#endregion

@@ -82,15 +82,15 @@ namespace TrafficOpenApi.Controllers
 				ReturnModel = TrafficInfoInstance.NCCTVImage(p)
 			};
 			return Json(model, JsonRequestBehavior.AllowGet);
-		} 
+		}
 		#endregion
 
-		#region VMS : VMS 표출정보
-		public JsonResult VMS(VMS_P p)
+		#region VMSInfo : VMS 표출정보
+		public JsonResult VMSInfo(VMSInfo_P p)
 		{
-			WebReturnModel<VMS_R> model = new WebReturnModel<VMS_R>()
+			WebReturnModel<VMSInfo_R> model = new WebReturnModel<VMSInfo_R>()
 			{
-				ReturnModel = TrafficInfoInstance.VMS(p)
+				ReturnModel = TrafficInfoInstance.VMSInfo(p)
 			};
 			return Json(model, JsonRequestBehavior.AllowGet);
 		}
